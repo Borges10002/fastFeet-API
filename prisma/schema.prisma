@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  DELIVERYMAN
+}
+
+enum OrderStatus {
+  PENDING
+  AWAITING
+  PICKED_UP
+  DELIVERED
+  RETURNED
+}
+
+model User {
+  id       String   @id @default(uuid())
+  cpf      String   @unique
+  name     String
+  password String
+  role     UserRole
+  latitude Float?
+  longitude Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("users")
+}
+
+model Recipient {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?
+  address   String
+  city      String
+  state     String
+  zipCode   String
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("recipients")
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  title       String
+  description String?
+  status      OrderStatus @default(PENDING)
+  photoUrl    String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  pickedUpAt  DateTime?
+  deliveredAt DateTime?
+
+  recipientId   String
+  recipient     Recipient @relation(fields: [recipientId], references: [id])
+  
+  deliverymanId String?
+  deliveryman   User?   @relation(fields: [deliverymanId], references: [id])
+
+  @@map("orders")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  recipientId String
+
+  @@map("notifications")
+}
